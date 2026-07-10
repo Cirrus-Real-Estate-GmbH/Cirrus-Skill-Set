@@ -19,6 +19,10 @@
     "apollo": {
       "type": "url",
       "url": "https://mcp.apollo.io/mcp"
+    },
+    "github": {
+      "type": "url",
+      "url": "https://api.githubcopilot.com/mcp"
     }
   }
 }
