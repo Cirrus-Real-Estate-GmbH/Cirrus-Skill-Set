@@ -9,7 +9,7 @@
   },
   "plugins": [
     {
-      "name": "cirrus-ai-profile",
+      "name": "cirrus-skill-set",
       "description": "Interne Cirrus-Skills fuer Immobilien-Akquise, Analyse, Bauprojekte und Team-Workflows",
       "source": "./plugins/cirrus-ai-profile",
       "strict": false,
