@@ -1,13 +1,35 @@
 {
-  "name": "cirrus-profile-marketplace",
+  "name": "cirrus-real-estate-org-marketplace",
   "owner": {
     "name": "Cirrus Real Estate GmbH"
+  },
+  "metadata": {
+    "description": "Interne Cirrus Real Estate Plugin-Marketplace (Organisation)",
+    "version": "1.0.0"
   },
   "plugins": [
     {
       "name": "cirrus-ai-profile",
+      "description": "Interne Cirrus-Skills fuer Immobilien-Akquise, Analyse, Bauprojekte und Team-Workflows",
       "source": "./plugins/cirrus-ai-profile",
-      "description": "Interne Cirrus-Skills fuer Immobilien-Akquise, Analyse, Bauprojekte und Team-Workflows"
+      "strict": false,
+      "author": {
+        "name": "Cirrus Real Estate GmbH"
+      },
+      "skills": [
+        "./skills/ausschreibungs-manager",
+        "./skills/bauablauf-tracker",
+        "./skills/cirrus-finanzierungs-factsheet",
+        "./skills/cirrus-onboarding",
+        "./skills/comps-analyse-generator",
+        "./skills/facade-color-configurator",
+        "./skills/finanzierungsanfrage-email",
+        "./skills/interior-design-configurator",
+        "./skills/loi-generator",
+        "./skills/service-provider-outreach",
+        "./skills/team-weekly-summary"
+      ],
+      "version": "1.2.0"
     }
   ]
 }
