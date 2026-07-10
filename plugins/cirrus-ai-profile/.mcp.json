@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "type": "url",
+      "url": "https://gmailmcp.googleapis.com/mcp/v1"
+    },
+    "google-calendar": {
+      "type": "url",
+      "url": "https://calendarmcp.googleapis.com/mcp/v1"
+    },
+    "google-drive": {
+      "type": "url",
+      "url": "https://drivemcp.googleapis.com/mcp/v1"
+    },
+    "clickup": {
+      "type": "url",
+      "url": "https://mcp.clickup.com/mcp"
+    },
+    "apollo": {
+      "type": "url",
+      "url": "https://mcp.apollo.io/mcp"
+    }
+  }
+}

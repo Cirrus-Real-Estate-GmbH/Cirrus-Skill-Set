@@ -4,5 +4,6 @@
   "description": "Cirrus Real Estate GmbH - gebuendelte interne Skills fuer Ankauf, Analyse, Bauprojekte und Team-Workflows",
   "author": {
     "name": "Cirrus Real Estate GmbH"
-  }
+  },
+  "mcpServers": "./.mcp.json"
 }
