@@ -1,5 +1,5 @@
 {
-  "name": "cirrus-skill-set-marketplace-v2",
+  "name": "cirrus-skill-set-marketplace-v3",
   "owner": {
     "name": "Cirrus Real Estate GmbH"
   },
@@ -27,9 +27,10 @@
         "./skills/interior-design-configurator",
         "./skills/loi-generator",
         "./skills/service-provider-outreach",
-        "./skills/team-weekly-summary"
+        "./skills/team-weekly-summary",
+        "./skills/cirrus-skill-creator"
       ],
-      "version": "1.2.0"
+      "version": "1.3.0"
     }
   ]
 }
