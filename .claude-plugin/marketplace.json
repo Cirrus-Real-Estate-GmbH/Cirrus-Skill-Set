@@ -1,0 +1,13 @@
+{
+  "name": "cirrus-profile-marketplace",
+  "owner": {
+    "name": "Cirrus Real Estate GmbH"
+  },
+  "plugins": [
+    {
+      "name": "cirrus-ai-profile",
+      "source": "./plugins/cirrus-ai-profile",
+      "description": "Interne Cirrus-Skills fuer Immobilien-Akquise, Analyse, Bauprojekte und Team-Workflows"
+    }
+  ]
+}

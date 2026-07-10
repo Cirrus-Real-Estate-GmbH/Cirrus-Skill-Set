@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Einrichtungs-Konfigurator</title>
+<style>
+  :root{
+    --bg: #1c1a17;
+    --surface: #262320;
+    --surface-2: #302c28;
+    --text: #efe9df;
+    --muted: #a89e91;
+    --accent: #c08a45;
+    --accent-2: #7c8b93;
+    --line: #3c372f;
+    --radius: 14px;
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    padding: 32px 20px 64px;
+  }
+  .wrap{ max-width: 980px; margin: 0 auto; }
+
+  header.page-head{ margin-bottom: 28px; }
+  header.page-head .eyebrow{
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  header.page-head h1{
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 34px;
+    margin: 6px 0 4px;
+    color: var(--text);
+  }
+  header.page-head p{
+    margin: 0;
+    color: var(--muted);
+    font-size: 14.5px;
+  }
+
+  nav.tabs{
+    display:flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 26px 0 22px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+  nav.tabs button{
+    font-family: var(--font-body);
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    padding: 9px 16px;
+    border-radius: 999px;
+    font-size: 13.5px;
+    cursor: pointer;
+    transition: all .15s ease;
+  }
+  nav.tabs button:hover{ color: var(--text); border-color: var(--accent); }
+  nav.tabs button[aria-selected="true"]{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1c1a17;
+    font-weight: 600;
+  }
+
+  .room-panel{ display:none; }
+  .room-panel.active{ display:block; }
+
+  .compare-frame{
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: #000;
+    box-shadow: 0 20px 50px -20px rgba(0,0,0,.6);
+    cursor: ew-resize;
+  }
+  .compare-img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+  .compare-img--right{
+    clip-path: inset(0 calc(100% - var(--pos, 50%)) 0 0);
+  }
+  .compare-divider{
+    position: absolute;
+    top: 0; bottom: 0;
+    left: var(--pos, 50%);
+    width: 2px;
+    background: rgba(239,233,223,.9);
+    transform: translateX(-1px);
+    pointer-events: none;
+  }
+  .compare-divider::after{
+    content: "⇄";
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 34px; height: 34px;
+    background: var(--text);
+    color: var(--bg);
+    border-radius: 50%;
+    display: flex; align-items:center; justify-content:center;
+    font-size: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,.35);
+  }
+  .compare-range{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+  .compare-tag{
+    position: absolute;
+    top: 14px;
+    padding: 5px 12px;
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    background: rgba(28,26,23,.75);
+    color: var(--text);
+    pointer-events: none;
+    backdrop-filter: blur(3px);
+  }
+  .compare-tag--left{ left: 14px; }
+  .compare-tag--right{ right: 14px; }
+
+  .room-toolbar{
+    display:flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+  }
+  .swap-btn{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    cursor: pointer;
+    display:flex;
+    align-items:center;
+    gap: 6px;
+  }
+  .swap-btn:hover{ border-color: var(--accent); color: var(--accent); }
+
+  .cards{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 18px 0 26px;
+  }
+  .card{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+  }
+  .card h4{
+    margin: 0 0 4px;
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 16px;
+  }
+  .card p{
+    margin: 0;
+    color: var(--muted);
+    font-size: 13px;
+  }
+  .card .badge{
+    display:inline-block;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--bg);
+    background: var(--accent);
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  ul.swatches{
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  ul.swatches li{
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+  ul.swatches li.is-active-left{ box-shadow: inset 0 0 0 2px var(--accent-2); }
+  ul.swatches li.is-active-right{ box-shadow: inset 0 0 0 2px var(--accent); }
+  ul.swatches img{
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+  }
+  ul.swatches .swatch-label{
+    padding: 8px 10px 2px;
+    font-size: 12.5px;
+    font-weight: 600;
+  }
+  ul.swatches .swatch-ist-badge{
+    font-size: 10px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .swatch-btns{
+    display:flex;
+    gap: 6px;
+    padding: 8px 10px 10px;
+  }
+  .swatch-btns button{
+    flex: 1;
+    font-size: 11.5px;
+    padding: 5px 0;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .swatch-btns button:hover{ border-color: var(--accent); }
+  .swatch-btns button.active{
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--bg);
+    font-weight: 600;
+  }
+
+  footer.hint{
+    margin-top: 30px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 640px){
+    .cards{ grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-head">
+    <div class="eyebrow">Einrichtungs-Konfigurator</div>
+    <h1 id="siteTitle">Wohnungs-Exposé</h1>
+    <p>Regler ziehen für Vorher/Nachher &middot; Kacheln anklicken, um jede Variante links oder rechts zu vergleichen</p>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+  <div id="panels"></div>
+
+  <footer class="hint">Erstellt mit dem Einrichtungs-Konfigurator</footer>
+</div>
+
+<script>
+/*__DATA__*/
+
+(function(){
+  document.getElementById('siteTitle').textContent = DATA.title || 'Wohnungs-Exposé';
+
+  const tabsEl = document.getElementById('tabs');
+  const panelsEl = document.getElementById('panels');
+
+  const state = {}; // per room: { left, right }
+
+  DATA.rooms.forEach((room, ri) => {
+    const defaultRight = room.items.findIndex(it => it.recommended);
+    const firstNonIst = room.items.findIndex(it => !it.is_ist);
+    state[room.key] = {
+      left: room.items.findIndex(it => it.is_ist) >= 0 ? room.items.findIndex(it => it.is_ist) : 0,
+      right: defaultRight >= 0 ? defaultRight : (firstNonIst >= 0 ? firstNonIst : Math.min(1, room.items.length - 1))
+    };
+
+    const tabBtn = document.createElement('button');
+    tabBtn.textContent = room.label || room.key;
+    tabBtn.setAttribute('data-room-tab', room.key);
+    tabBtn.setAttribute('aria-selected', ri === 0 ? 'true' : 'false');
+    tabBtn.addEventListener('click', () => selectRoom(room.key));
+    tabsEl.appendChild(tabBtn);
+
+    const panel = document.createElement('section');
+    panel.className = 'room-panel' + (ri === 0 ? ' active' : '');
+    panel.setAttribute('data-room', room.key);
+
+    const aspect = room.aspect || '4/3';
+    panel.innerHTML = `
+      <div class="compare-frame" style="aspect-ratio:${aspect};">
+        <img class="compare-img compare-img--left" data-role="left-img">
+        <img class="compare-img compare-img--right" data-role="right-img">
+        <div class="compare-divider" data-role="divider"></div>
+        <span class="compare-tag compare-tag--left" data-role="left-tag"></span>
+        <span class="compare-tag compare-tag--right" data-role="right-tag"></span>
+        <input type="range" class="compare-range" min="0" max="100" value="50" data-role="range">
+      </div>
+      <div class="room-toolbar">
+        <button class="swap-btn" data-role="swap">⇄ Seiten tauschen</button>
+      </div>
+      <div class="cards" data-role="cards"></div>
+      <ul class="swatches" data-role="swatches"></ul>
+    `;
+    panelsEl.appendChild(panel);
+
+    // swatches
+    const swatchesEl = panel.querySelector('[data-role="swatches"]');
+    room.items.forEach((item, idx) => {
+      const li = document.createElement('li');
+      li.setAttribute('data-swatch', '');
+      li.setAttribute('data-index', idx);
+      li.innerHTML = `
+        <img src="${item.src}" alt="${item.title || item.short || ''}">
+        <div class="swatch-label">${item.short || item.title || ('Option ' + (idx+1))}${item.is_ist ? '<div class="swatch-ist-badge">Original</div>' : ''}</div>
+        <div class="swatch-btns">
+          <button data-side="left">Links</button>
+          <button data-side="right">Rechts</button>
+        </div>
+      `;
+      li.querySelector('[data-side="left"]').addEventListener('click', () => setSide(room.key, 'left', idx));
+      li.querySelector('[data-side="right"]').addEventListener('click', () => setSide(room.key, 'right', idx));
+      swatchesEl.appendChild(li);
+    });
+
+    // range drag
+    const rangeEl = panel.querySelector('[data-role="range"]');
+    rangeEl.addEventListener('input', () => {
+      panel.style.setProperty('--pos', rangeEl.value + '%');
+    });
+
+    // swap
+    panel.querySelector('[data-role="swap"]').addEventListener('click', () => {
+      const s = state[room.key];
+      const tmp = s.left; s.left = s.right; s.right = tmp;
+      render(room);
+    });
+
+    render(room);
+  });
+
+  function setSide(roomKey, side, idx){
+    const room = DATA.rooms.find(r => r.key === roomKey);
+    const s = state[roomKey];
+    const other = side === 'left' ? 'right' : 'left';
+    if (s[other] === idx){
+      // avoid both sides pointing at the same item: bump the other side
+      s[other] = s[side];
+    }
+    s[side] = idx;
+    render(room);
+  }
+
+  function render(room){
+    const panel = panelsEl.querySelector(`[data-room="${room.key}"]`);
+    const s = state[room.key];
+    const leftItem = room.items[s.left];
+    const rightItem = room.items[s.right];
+
+    panel.querySelector('[data-role="left-img"]').src = leftItem.src;
+    panel.querySelector('[data-role="right-img"]').src = rightItem.src;
+    panel.querySelector('[data-role="left-tag"]').textContent = leftItem.short || leftItem.title || '';
+    panel.querySelector('[data-role="right-tag"]').textContent = rightItem.short || rightItem.title || '';
+
+    const cardsEl = panel.querySelector('[data-role="cards"]');
+    cardsEl.innerHTML = `
+      <div class="card">
+        <h4>${leftItem.title || leftItem.short || ''}</h4>
+        <p>${leftItem.desc || ''}</p>
+      </div>
+      <div class="card">
+        <h4>${rightItem.title || rightItem.short || ''}${rightItem.recommended ? '<span class="badge">Empfehlung</span>' : ''}</h4>
+        <p>${rightItem.desc || ''}</p>
+      </div>
+    `;
+
+    panel.querySelectorAll('[data-swatch]').forEach(li => {
+      const idx = Number(li.getAttribute('data-index'));
+      li.classList.toggle('is-active-left', idx === s.left);
+      li.classList.toggle('is-active-right', idx === s.right);
+      li.querySelector('[data-side="left"]').classList.toggle('active', idx === s.left);
+      li.querySelector('[data-side="right"]').classList.toggle('active', idx === s.right);
+    });
+  }
+
+  function selectRoom(key){
+    panelsEl.querySelectorAll('.room-panel').forEach(p => {
+      p.classList.toggle('active', p.getAttribute('data-room') === key);
+    });
+    tabsEl.querySelectorAll('button').forEach(b => {
+      b.setAttribute('aria-selected', b.getAttribute('data-room-tab') === key ? 'true' : 'false');
+    });
+  }
+
+  // expose for structural verification
+  window.DATA = DATA;
+})();
+</script>
+</body>
+</html>

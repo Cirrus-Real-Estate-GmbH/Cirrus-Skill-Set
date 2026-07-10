@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<title>__PROJECT_TITLE__ — Bauablauf</title>
+<style>
+:root{ color-scheme: light; }
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background:#f5f6f8;
+  color:#1c1e21;
+}
+.wrap{ max-width:1180px; margin:0 auto; padding:20px 20px 60px; }
+
+/* Header */
+.header{ display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; margin-bottom:20px;}
+.header h1{ font-size:22px; margin:0 0 4px; }
+.header .sub{ font-size:13px; color:#6b7280; }
+
+/* Summary bar */
+.summary{ display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
+.summary .card{ background:#fff; border-radius:12px; padding:14px 16px; box-shadow:0 1px 2px rgba(0,0,0,0.06); border:1px solid #eceef1; }
+.summary .card .label{ font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:#8a8f98; margin-bottom:6px; }
+.summary .card .value{ font-size:22px; font-weight:700; line-height:1.1; }
+.summary .card .value.warn{ color:#d1381f; }
+.summary .card .value.good{ color:#1a7f42; }
+.summary .card .hint{ font-size:12px; color:#8a8f98; margin-top:4px; }
+
+/* Loading / error */
+#status{ padding:40px 0; text-align:center; color:#8a8f98; font-size:14px; }
+#error{ display:none; background:#fdecea; color:#a4262c; border:1px solid #f3b8b4; padding:12px 16px; border-radius:10px; margin-bottom:16px; font-size:13px; }
+
+/* Gewerke grid */
+.grid{ display:grid; grid-template-columns:repeat(auto-fit, minmax(320px,1fr)); gap:16px; margin-bottom:28px; }
+.gcard{ background:#fff; border-radius:14px; padding:16px 18px; box-shadow:0 1px 2px rgba(0,0,0,0.06); border:1px solid #eceef1; border-left:5px solid var(--c); }
+.gcard .ghead{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; gap:8px;}
+.gcard .gname{ font-size:15px; font-weight:700; }
+.gcard .gflex{ font-size:11px; background:#eafaf1; color:#1a7f42; border-radius:6px; padding:2px 7px; font-weight:600; white-space:nowrap;}
+.gcard .gpct{ font-size:13px; font-weight:700; color:var(--c); }
+.bar{ height:8px; border-radius:5px; background:#eef0f2; overflow:hidden; margin-bottom:8px; }
+.bar > div{ height:100%; background:var(--c); }
+.statusrow{ display:flex; gap:10px; font-size:11.5px; color:#6b7280; margin-bottom:10px; flex-wrap:wrap; }
+.statusrow span b{ color:#1c1e21; }
+.todolist{ list-style:none; margin:0; padding:0; border-top:1px solid #f0f1f3; padding-top:8px;}
+.todolist li{ display:flex; justify-content:space-between; gap:8px; align-items:baseline; padding:4px 0; font-size:12.5px; }
+.todolist a{ color:#1c1e21; text-decoration:none; }
+.todolist a:hover{ text-decoration:underline; }
+.tname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:210px; }
+.tdue{ flex-shrink:0; font-size:11px; color:#8a8f98; }
+.tdue.overdue{ color:#d1381f; font-weight:700; }
+.tdue.soon{ color:#b26b00; font-weight:600; }
+.empty-todos{ font-size:12px; color:#8a8f98; font-style:italic; padding:4px 0; }
+
+/* Next deadlines section */
+.section-title{ font-size:15px; font-weight:700; margin:6px 0 12px; }
+.deadlines{ background:#fff; border-radius:14px; border:1px solid #eceef1; overflow:hidden; margin-bottom:24px;}
+.dl-row{ display:flex; align-items:center; gap:12px; padding:10px 16px; font-size:13px; border-bottom:1px solid #f2f3f5; }
+.dl-row:last-child{ border-bottom:none; }
+.dl-dot{ width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.dl-name{ flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.dl-tag{ font-size:10.5px; color:#6b7280; background:#f2f3f5; border-radius:6px; padding:2px 7px; }
+.dl-date{ font-size:12.5px; width:100px; text-align:right; flex-shrink:0; color:#6b7280; }
+.dl-date.overdue{ color:#d1381f; font-weight:700; }
+.dl-date.soon{ color:#b26b00; font-weight:600; }
+
+.footer{ font-size:11.5px; color:#9aa0a8; margin-top:20px; line-height:1.6; }
+.footer b{color:#6b7280;}
+a.tlink{ color:inherit; }
+
+/* Timeline */
+.timeline{ background:#fff; border-radius:14px; border:1px solid #eceef1; padding:16px 18px 18px; margin-bottom:28px; }
+.tl-body{ position:relative; }
+.tl-axis{ position:relative; height:18px; margin-bottom:4px; }
+.tl-axis-tick{ position:absolute; top:0; font-size:10px; color:#9aa0a8; transform:translateX(-50%); white-space:nowrap; }
+.tl-row{ display:flex; align-items:center; height:30px; position:relative; z-index:2; }
+.tl-row + .tl-row{ border-top:1px solid #f5f6f7; }
+.tl-label{ width:180px; flex-shrink:0; font-size:12px; font-weight:600; padding-right:10px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tl-label .tl-flexbadge{ font-size:9px; font-weight:700; color:#1a7f42; background:#eafaf1; border-radius:5px; padding:1px 5px; margin-left:4px; white-space:nowrap; }
+.tl-track{ flex:1; position:relative; height:100%; }
+.tl-track .tl-baseline{ position:absolute; top:50%; left:0; right:0; height:1px; background:#eef0f2; transform:translateY(-50%); }
+.tl-bar{ position:absolute; top:50%; height:7px; border-radius:4px; transform:translateY(-50%); opacity:.85; }
+.tl-bar.flex{ background-image:repeating-linear-gradient(135deg, var(--bc), var(--bc) 4px, rgba(255,255,255,.6) 4px, rgba(255,255,255,.6) 8px); }
+.tl-marker{ position:absolute; top:50%; width:9px; height:9px; border-radius:50%; transform:translate(-50%,-50%); border:2px solid #fff; box-shadow:0 0 0 1px rgba(0,0,0,0.15); cursor:default; }
+.tl-marker.overdue{ background:#d1381f !important; }
+.tl-marker.soon{ background:#b26b00 !important; }
+.tl-empty{ font-size:11.5px; color:#b9bec6; font-style:italic; }
+.tl-vline{ position:absolute; top:0; bottom:0; width:0; border-left:1px dashed #c7cbd1; z-index:1; }
+.tl-vline.today{ border-left:2px solid #3e63dd; }
+.tl-vline.deadline{ border-left:2px solid #d1381f; }
+.tl-vlabel{ position:absolute; top:0; font-size:10px; font-weight:700; transform:translateX(-50%); white-space:nowrap; padding:1px 5px; border-radius:4px; z-index:3; }
+.tl-vlabel.today{ color:#3e63dd; background:#eef1fd; }
+.tl-vlabel.deadline{ color:#d1381f; background:#fdecea; }
+.tl-legend{ display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:#8a8f98; margin-top:12px; padding-top:10px; border-top:1px solid #f2f3f5; }
+.tl-legend span{ display:inline-flex; align-items:center; gap:5px; }
+.tl-legend i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <h1>🏗️ __PROJECT_TITLE__ — Bauablauf</h1>
+      <div class="sub" id="updatedAt">wird geladen …</div>
+    </div>
+  </div>
+
+  <div id="error"></div>
+  <div id="status">Lade Daten aus ClickUp …</div>
+
+  <div id="content" style="display:none;">
+    <div class="summary" id="summary"></div>
+
+    <div class="section-title">Zeitplan je Gewerk</div>
+    <div class="timeline" id="timeline"></div>
+
+    <div class="grid" id="grid"></div>
+
+    <div class="section-title">Nächste anstehende Fristen (projektweit)</div>
+    <div class="deadlines" id="deadlines"></div>
+
+    <div class="footer" id="footerNote"></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   PROJEKT-KONFIGURATION — hier beim Aufsetzen eines neuen
+   Projekts anpassen. Alles andere unten ist generische Logik
+   und muss normalerweise NICHT verändert werden.
+   ============================================================ */
+const CONFIG = {
+  // ClickUp-Liste dieses Projekts (clickup_create_list / clickup_get_list liefert die ID)
+  listId: '__LIST_ID__',
+
+  // Name der Aufgabe, die als Einzugstermin/Enddeadline gilt (Groß-/Kleinschreibung egal).
+  // Wird unter den geladenen Aufgaben gesucht; falls keine solche Aufgabe existiert,
+  // greift fallbackDeadlineISO. Wenn beides leer/null ist, läuft das Dashboard ohne
+  // Deadline-Anzeige (Countdown-Karte und Linie werden dann ausgeblendet).
+  deadlineTaskName: '__DEADLINE_TASK_NAME__', // z.B. 'EINZUG' — leer lassen ('') falls nicht zutreffend
+  fallbackDeadlineISO: '__FALLBACK_DEADLINE_ISO__', // z.B. '2026-08-07' — oder null
+
+  // Exakte MCP-Tool-Namen für DIESE Session/DIESEN ClickUp-Connector.
+  // WICHTIG: Diese enthalten eine pro Nutzer/Verbindung einzigartige UUID
+  // (mcp__<uuid>__clickup_filter_tasks) und müssen bei jedem neuen Setup
+  // per ToolSearch("clickup") neu ermittelt und hier eingetragen werden —
+  // NICHT einfach aus einem anderen Projekt kopieren.
+  tools: {
+    filterTasks: '__CLICKUP_FILTER_TASKS_TOOL__',
+  },
+};
+
+// Gewerke dieses Projekts. Für jedes Gewerk: eindeutiger key, Anzeigename (Firma/Person),
+// Farbe (Hex, gerne die ClickUp-Label-Farbe falls vorhanden), "flexible: true" falls dieses
+// Gewerk laut Nutzer-Angabe planmäßig über den Einzugstermin hinaus laufen darf, und eine
+// Liste von Stichwörtern (klein geschrieben) die in Aufgabennamen/Tags auf dieses Gewerk
+// hindeuten (Firmennamen, Ansprechpartner-Vornamen, typische Gewerks-Begriffe).
+// Reihenfolge ist Priorität: die am weitesten oben stehende passende Regel gewinnt, darum
+// spezifische/eindeutige Gewerke (Elektro, HLS, Dach, GaLa ...) vor generische Begriffe wie
+// "fassade" oder "lieferung" stellen. Das letzte Gewerk sollte immer ein Auffangbecken
+// "Intern / Planung / Verwaltung" mit leerer kw-Liste sein.
+const GEWERKE = [
+  __GEWERKE_ARRAY__
+];
+
+function parseResult(r){
+  if(!r) throw new Error('Keine Antwort vom Tool erhalten.');
+  if(r.isError) throw new Error((r.content && r.content[0] && r.content[0].text) || 'ClickUp-Aufruf fehlgeschlagen.');
+  if(r.structuredContent) return r.structuredContent;
+  return JSON.parse(r.content[0].text);
+}
+
+async function fetchAllTasks(){
+  let all = [];
+  for(let page=0; page<25; page++){
+    const r = await window.cowork.callMcpTool(CONFIG.tools.filterTasks, {
+      list_ids:[CONFIG.listId], include_closed:true, subtasks:true, page
+    });
+    const data = parseResult(r);
+    const tasks = data.tasks || [];
+    all = all.concat(tasks);
+    if(tasks.length < 100) break;
+  }
+  return all;
+}
+
+function resolveDeadline(tasks){
+  const name = (CONFIG.deadlineTaskName||'').trim().toLowerCase();
+  if(name){
+    const hit = tasks.find(t=>(t.name||'').trim().toLowerCase()===name && t.due_date);
+    if(hit) return parseInt(hit.due_date,10);
+  }
+  if(CONFIG.fallbackDeadlineISO){
+    const d = new Date(CONFIG.fallbackDeadlineISO + 'T00:00:00');
+    if(!isNaN(d.getTime())) return d.getTime();
+  }
+  return null;
+}
+
+function classify(task){
+  const tagStr = (task.tags||[]).map(t=>t.name||'').join(' ').toLowerCase();
+  const text = (' ' + (task.name||'').toLowerCase() + ' ' + tagStr + ' ');
+  for(const g of GEWERKE){
+    if(!g.kw || !g.kw.length) continue;
+    for(const k of g.kw){
+      if(text.includes(k)) return g;
+    }
+  }
+  return GEWERKE[GEWERKE.length-1]; // Auffangbecken (letztes Gewerk, i.d.R. "Intern")
+}
+
+function fmtDate(ms){
+  if(!ms) return null;
+  const d = new Date(parseInt(ms,10));
+  return d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+function daysUntil(ms){
+  const now = new Date(); now.setHours(0,0,0,0);
+  const target = new Date(parseInt(ms,10)); target.setHours(0,0,0,0);
+  return Math.round((target-now)/86400000);
+}
+
+function isDone(status){
+  return (status||'').toLowerCase()==='complete';
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+
+const TL_LABEL_W = 180; // muss zu CSS .tl-label{width:180px} passen
+
+function renderTimeline(buckets, deadlineMs){
+  const el = document.getElementById('timeline');
+  const now = new Date(); now.setHours(0,0,0,0);
+  const todayMs = now.getTime();
+
+  let latest = deadlineMs || todayMs;
+  GEWERKE.forEach(g=>{
+    (buckets[g.key]||{tasks:[]}).tasks.forEach(t=>{
+      if(!isDone(t.status) && t.due_date){
+        const d = parseInt(t.due_date,10);
+        if(d > latest) latest = d;
+      }
+    });
+  });
+  const bufferMs = 6*86400000;
+  let rangeStart = todayMs;
+  let rangeEnd = latest + bufferMs;
+  if(rangeEnd - rangeStart < 21*86400000) rangeEnd = rangeStart + 21*86400000;
+
+  const frac = ms => Math.min(1, Math.max(0, (ms - rangeStart) / (rangeEnd - rangeStart)));
+  const leftCss = f => `calc(${TL_LABEL_W}px + (100% - ${TL_LABEL_W}px) * ${f})`;
+
+  let axisTicks = '';
+  for(let t = rangeStart; t <= rangeEnd; t += 7*86400000){
+    const f = frac(t);
+    axisTicks += `<div class="tl-axis-tick" style="left:${leftCss(f)}">${fmtDate(t).slice(0,5)}</div>`;
+  }
+
+  let rows = '';
+  GEWERKE.forEach(g=>{
+    const b = buckets[g.key] || {tasks:[]};
+    const openWithDate = b.tasks
+      .filter(t=>!isDone(t.status) && t.due_date)
+      .sort((a,c)=>parseInt(a.due_date,10)-parseInt(c.due_date,10));
+    const openNoDate = b.tasks.filter(t=>!isDone(t.status) && !t.due_date).length;
+
+    let trackInner = '<div class="tl-baseline"></div>';
+    if(openWithDate.length){
+      const endMs = parseInt(openWithDate[openWithDate.length-1].due_date,10);
+      const endF = frac(endMs);
+      trackInner += `<div class="tl-bar ${g.flexible?'flex':''}" style="--bc:${g.color}; left:${leftCss(0)}; width:calc(${leftCss(endF)} - ${leftCss(0)}); background:${g.color};"></div>`;
+      openWithDate.forEach(t=>{
+        const f = frac(parseInt(t.due_date,10));
+        const dleft = daysUntil(t.due_date);
+        let cls = '';
+        if(!g.flexible && dleft<0) cls='overdue';
+        else if(!g.flexible && dleft<=7) cls='soon';
+        trackInner += `<div class="tl-marker ${cls}" style="left:${leftCss(f)}; background:${g.color};" title="${escapeHtml(t.name)} — ${fmtDate(t.due_date)}"></div>`;
+      });
+    }
+
+    const totalOpen = b.tasks.filter(t=>!isDone(t.status)).length;
+    let emptyNote = '';
+    if(!openWithDate.length){
+      if(b.tasks.length===0) emptyNote = 'keine Aufgaben';
+      else if(totalOpen===0) emptyNote = '✓ abgeschlossen';
+      else emptyNote = totalOpen + ' offene Aufgabe(n) ohne Termin';
+    } else if(openNoDate){
+      emptyNote = '+' + openNoDate + ' ohne Termin';
+    }
+
+    rows += `<div class="tl-row">
+      <div class="tl-label">${g.label.split('—')[0].trim()}${g.flexible?'<span class="tl-flexbadge">flexibel</span>':''}</div>
+      <div class="tl-track">${trackInner}</div>
+      ${emptyNote ? `<div class="tl-empty" style="width:150px;flex-shrink:0;text-align:right;padding-left:8px;">${emptyNote}</div>` : '<div style="width:150px;flex-shrink:0;"></div>'}
+    </div>`;
+  });
+
+  const todayF = frac(todayMs);
+  let deadlineLine = '';
+  if(deadlineMs){
+    const deadlineF = frac(deadlineMs);
+    deadlineLine = `
+      <div class="tl-vline deadline" style="left:${leftCss(deadlineF)}"></div>
+      <div class="tl-vlabel deadline" style="left:${leftCss(deadlineF)}; top:auto; bottom:0;">Deadline ${fmtDate(deadlineMs)}</div>`;
+  }
+
+  el.innerHTML = `
+    <div class="tl-body">
+      <div class="tl-axis">${axisTicks}</div>
+      <div class="tl-vline today" style="left:${leftCss(todayF)}"></div>
+      <div class="tl-vlabel today" style="left:${leftCss(todayF)}">Heute</div>
+      ${deadlineLine}
+      ${rows}
+    </div>
+    <div class="tl-legend">
+      <span><i style="background:#3e63dd"></i>Heute</span>
+      <span><i style="background:#d1381f"></i>Deadline / überfällig</span>
+      <span><i style="background:#b26b00"></i>fällig in ≤7 Tagen</span>
+      <span><i style="background:#8a8f98"></i>Balken = Zeitraum bis letzte offene Fälligkeit im Gewerk</span>
+      <span>▨ gestreift = flexibles Gewerk, darf länger laufen</span>
+    </div>
+  `;
+}
+
+async function main(){
+  try{
+    const tasks = await fetchAllTasks();
+    const deadlineMs = resolveDeadline(tasks);
+
+    document.getElementById('updatedAt').textContent =
+      'Aktualisiert: ' + new Date().toLocaleString('de-DE') + ' · ' + tasks.length + ' Aufgaben aus ClickUp geladen';
+
+    const buckets = {};
+    GEWERKE.forEach(g => buckets[g.key] = { def:g, tasks:[] });
+    tasks.forEach(t => { buckets[classify(t).key].tasks.push(t); });
+
+    const totalTasks = tasks.length;
+    const doneTasks = tasks.filter(t=>isDone(t.status)).length;
+    const pct = totalTasks ? Math.round(doneTasks/totalTasks*100) : 0;
+    const daysLeft = deadlineMs!=null ? daysUntil(deadlineMs) : null;
+
+    const overdueCritical = tasks.filter(t=>{
+      if(isDone(t.status) || !t.due_date) return false;
+      if(classify(t).flexible) return false;
+      return daysUntil(t.due_date) < 0;
+    }).length;
+
+    const summaryEl = document.getElementById('summary');
+    summaryEl.innerHTML = `
+      <div class="card">
+        <div class="label">Deadline</div>
+        <div class="value">${deadlineMs!=null ? fmtDate(deadlineMs) : '—'}</div>
+        <div class="hint">${deadlineMs==null ? 'kein Termin hinterlegt' : (daysLeft>=0 ? daysLeft+' Tage verbleibend' : (-daysLeft)+' Tage überfällig')}</div>
+      </div>
+      <div class="card">
+        <div class="label">Gesamtfortschritt</div>
+        <div class="value good">${pct}%</div>
+        <div class="hint">${doneTasks} von ${totalTasks} Aufgaben erledigt</div>
+      </div>
+      <div class="card">
+        <div class="label">Offene Aufgaben</div>
+        <div class="value">${totalTasks - doneTasks}</div>
+        <div class="hint">über alle Gewerke</div>
+      </div>
+      <div class="card">
+        <div class="label">Überfällig (kritisch)</div>
+        <div class="value ${overdueCritical>0?'warn':'good'}">${overdueCritical}</div>
+        <div class="hint">flexible Gewerke ausgenommen</div>
+      </div>
+    `;
+
+    renderTimeline(buckets, deadlineMs);
+
+    const gridEl = document.getElementById('grid');
+    gridEl.innerHTML = GEWERKE.map(g=>{
+      const b = buckets[g.key];
+      const total = b.tasks.length;
+      const done = b.tasks.filter(t=>isDone(t.status)).length;
+      const inProgress = b.tasks.filter(t=>(t.status||'').toLowerCase()==='in progress').length;
+      const waiting = b.tasks.filter(t=>(t.status||'').toLowerCase().includes('rückmeldung')).length;
+      const todo = total - done - inProgress - waiting;
+      const gpct = total ? Math.round(done/total*100) : 0;
+
+      const openTasks = b.tasks
+        .filter(t=>!isDone(t.status))
+        .sort((a,b2)=>{
+          const da = a.due_date ? parseInt(a.due_date,10) : Infinity;
+          const db = b2.due_date ? parseInt(b2.due_date,10) : Infinity;
+          return da-db;
+        })
+        .slice(0,5);
+
+      const todosHtml = openTasks.length ? openTasks.map(t=>{
+        let dueClass='', dueLabel='ohne Termin';
+        if(t.due_date){
+          const dleft = daysUntil(t.due_date);
+          dueLabel = fmtDate(t.due_date);
+          if(!g.flexible && dleft<0) dueClass='overdue';
+          else if(!g.flexible && dleft<=7) dueClass='soon';
+        }
+        return `<li>
+          <a class="tname tlink" href="${t.url}" target="_blank" title="${escapeHtml(t.name)}">${escapeHtml(t.name)}</a>
+          <span class="tdue ${dueClass}">${dueLabel}</span>
+        </li>`;
+      }).join('') : '<div class="empty-todos">Keine offenen Aufgaben 🎉</div>';
+
+      return `<div class="gcard" style="--c:${g.color}">
+        <div class="ghead">
+          <div class="gname">${g.label}</div>
+          ${g.flexible ? '<div class="gflex">Zeitrahmen flexibel</div>' : `<div class="gpct">${gpct}%</div>`}
+        </div>
+        <div class="bar"><div style="width:${gpct}%"></div></div>
+        <div class="statusrow">
+          <span>Offen: <b>${todo}</b></span>
+          <span>In Arbeit: <b>${inProgress}</b></span>
+          <span>Wartet auf Rückm.: <b>${waiting}</b></span>
+          <span>Erledigt: <b>${done}</b></span>
+        </div>
+        <div class="section-title" style="font-size:12px;margin:0 0 6px;color:#8a8f98;">Nächste ToDos</div>
+        <ul class="todolist">${todosHtml}</ul>
+      </div>`;
+    }).join('');
+
+    const upcoming = tasks
+      .filter(t=>!isDone(t.status) && t.due_date && !classify(t).flexible)
+      .sort((a,b)=>parseInt(a.due_date,10)-parseInt(b.due_date,10))
+      .slice(0,12);
+
+    const dlEl = document.getElementById('deadlines');
+    dlEl.innerHTML = upcoming.length ? upcoming.map(t=>{
+      const g = classify(t);
+      const dleft = daysUntil(t.due_date);
+      let cls = '';
+      if(dleft<0) cls='overdue'; else if(dleft<=7) cls='soon';
+      return `<div class="dl-row">
+        <div class="dl-dot" style="background:${g.color}"></div>
+        <a class="dl-name tlink" href="${t.url}" target="_blank">${escapeHtml(t.name)}</a>
+        <div class="dl-tag">${g.label.split('—')[0].trim()}</div>
+        <div class="dl-date ${cls}">${fmtDate(t.due_date)}</div>
+      </div>`;
+    }).join('') : '<div class="dl-row">Keine Fristen mit Datum offen.</div>';
+
+    document.getElementById('footerNote').innerHTML =
+      `<b>Hinweis:</b> Die Zuordnung zu Gewerken erfolgt automatisch anhand von Aufgabenname und Tags. ` +
+      `Für höhere Genauigkeit kann zusätzlich ein ClickUp-Label-Feld "Gewerk" gepflegt werden. ` +
+      (GEWERKE.some(g=>g.flexible) ? 'Als flexibel markierte Gewerke sind bewusst von der Deadline-Kritisch-Zählung ausgenommen.' : '');
+
+    document.getElementById('status').style.display='none';
+    document.getElementById('content').style.display='block';
+
+  }catch(e){
+    document.getElementById('status').style.display='none';
+    const errEl = document.getElementById('error');
+    errEl.style.display='block';
+    errEl.textContent = 'Fehler beim Laden der ClickUp-Daten: ' + e.message;
+  }
+}
+
+main();
+</script>
+</body>
+</html>
