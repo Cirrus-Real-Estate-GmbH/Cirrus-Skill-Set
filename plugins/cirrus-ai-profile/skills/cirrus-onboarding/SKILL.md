@@ -11,7 +11,7 @@ description: >
   shared "03 Skills" Drive folder (skippable per skill), setting the default reach,
   and running a final functional test — until the profile matches the Cirrus baseline.
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
   author: "Cirrus Real Estate GmbH"
 ---
 
@@ -25,23 +25,25 @@ continue. After the baseline is reached, make clear that further customization
 (which optional skills to keep active, extra connectors, etc.) is entirely up to the
 individual person.
 
-## Kontext: warum manuell statt zentralem Plugin
+## Kontext: zentrales GitHub-Plugin
 
-Es gibt bewusst KEIN zentrales `cirrus-ai-profile`-Plugin mehr, das Team-Skills bündelt
-und synchronisiert (das würde einen Team-Account und GitHub-Kenntnisse voraussetzen, die
-aktuell nicht vorhanden sind). Falls dieses Plugin bei einem Nutzer noch installiert ist,
-darauf hinweisen, dass es veraltet ist und deinstalliert werden kann.
+Die Quelle der Wahrheit für Team-Skills ist jetzt das GitHub-Repository
+**`https://github.com/Cirrus-Real-Estate-GmbH/Cirrus-Skill-Set`** (öffentlich lesbar). Es
+enthält ein einziges Plugin (`cirrus-skill-set`), das alle Team-Skills sowie die Standard-
+Connectors bündelt. Jede Person bindet dieses Repo einmalig als Marketplace ein und
+installiert das Plugin — Updates werden danach per "Sync automatically" + "Check for
+updates" abgeholt, kein manuelles Kopieren aus Drive mehr nötig.
 
-Stattdessen ist die Quelle der Wahrheit für Team-Skills der gemeinsame Drive-Ordner
-**"03 Skills"** (im Cirrus Shared Drive, oberste Ebene). Dort legt jede Person, die einen
-Skill baut oder verbessert, einen nummerierten Unterordner mit ihren Initialen an
-(Beispiel: `14 - Comps Analyse (LE)`), der die fertige Skill-Struktur (`SKILL.md` + ggf.
-`references/`, `assets/`, `scripts/`) enthält. Der Ordnerinhalt ändert sich laufend — bei
-jedem Onboarding-Lauf den aktuellen Stand live abfragen, NICHT eine feste Liste annehmen.
-Jede Person installiert sich die gewünschten Skills einmalig selbst als eigene,
-persönliche Skills in Claude. Bei Verbesserungen wird der jeweilige Unterordner im Drive
-aktualisiert und im Team kommuniziert — jede Person zieht sich das Update dann manuell
-nach demselben Verfahren wie bei der Erstinstallation nach.
+Der alte, rein Drive-basierte Weg (Schritt für Schritt jeden Skill einzeln aus dem
+"03 Skills"-Ordner als ZIP hochladen) ist damit abgelöst. Falls ein Nutzer noch einzelne,
+so installierte Alt-Skills hat, die inzwischen auch im GitHub-Plugin enthalten sind, kurz
+empfehlen, die Alt-Version zu entfernen, um Dopplungen zu vermeiden.
+
+**Bekannte Eigenheit beim Marketplace-Update:** Ein reiner Inhalts-Push auf GitHub wird von
+Claude nicht automatisch übernommen — der interne `"name"`-Wert in der `marketplace.json`
+muss bei jedem Update mit hochgezählt werden (z. B. `-v3` → `-v4`), sonst bleibt der alte
+Stand sichtbar, auch nach "Check for updates". Das übernimmt automatisch, wer den
+`cirrus-skill-creator`-Skill zum Ausrollen von Updates benutzt.
 
 ## Guardrails (always apply)
 
@@ -76,8 +78,6 @@ Required connectors for the Cirrus baseline:
 - **Control Your Mac** (local MCP — AppleScript automation)
 - **Filesystem** (local MCP — access to the user's own files)
 
-Not part of the standard: GitHub (not used at Cirrus).
-
 Call `ListConnectors` and compare against this list. Present a short checklist showing
 which are already connected (✅) and which are still missing (⬜). For each missing
 connector:
@@ -93,6 +93,23 @@ connector:
 4. Re-run `ListConnectors` to verify it is now green before moving on.
 
 Go connector by connector, never batch all logins at once so nothing is skipped.
+
+## Step 1b — GitHub Custom Connector (nur für Skill-Autor:innen)
+
+Nur nötig für Personen, die selbst Skills bauen/hochladen wollen (nicht für reine Nutzer
+— die brauchen für Step 3/4 keinen GitHub-Zugang). Falls unklar: fragen, ob die Person
+plant, eigene Skills beizutragen; wenn nein, diesen Schritt überspringen.
+
+1. In Claude: Settings → Connectors → **"Add custom connector"**.
+2. MCP Server URL: `https://api.githubcopilot.com/mcp`
+3. Unter "Advanced settings": Client ID + Client Secret eintragen — bei Liron erfragen
+   (gemeinsame, bereits registrierte OAuth-App). Diese Werte NICHT per offener
+   Chat-Nachricht teilen lassen, sondern über einen sicheren Kanal (Passwort-Manager o. ä.).
+4. Eindeutig benennen (Empfehlung: **"Cirrus GitHub"**, nicht mehrfach anlegen — doppelte
+   Connector-Einträge mit unklaren Namen sorgen später für Verwirrung).
+5. "Add" klicken, dann "Connect" → mit dem EIGENEN GitHub-Account einloggen und bestätigen.
+6. Verifizieren, dass der Connector danach als Werkzeug nutzbar ist (kurzer Testaufruf,
+   z. B. das eigene GitHub-Profil abrufen).
 
 ## Step 2 — Claude in Chrome extension
 
@@ -114,48 +131,24 @@ Required plugins for the Cirrus baseline (Customize → Plugins):
 For each: check if already installed; if not, guide the user to Customize → Plugins →
 find it → Install. Confirm each one shows as installed before moving on.
 
-If `cirrus-ai-profile` (the old bundled Team-Skill plugin) is still installed, point out
-that it's deprecated and recommend removing it, so it doesn't conflict with the individually
-installed Team-Skills from Step 4.
+## Step 4 — Cirrus Team-Skills über den GitHub-Marketplace
 
-## Step 4 — Team-Skills aus dem "03 Skills"-Drive-Ordner
+Das ist der wichtigste Schritt für die tägliche Arbeit — bündelt alle Team-Skills in einem
+Plugin, ohne einzeln aus Drive kopieren zu müssen.
 
-Das ist der wichtigste Schritt für die tägliche Arbeit. Der Ordnerinhalt ändert sich
-laufend, deshalb IMMER live nachschauen statt eine gespeicherte Liste zu verwenden.
-Keine Vorab-Bewertung oder Sortierung der Skills vornehmen — einfach die nummerierten
-Ordner der Reihe nach abarbeiten. Es müssen nicht alle 100% perfekt/einheitlich formatiert
-sein; kleine Extra-Handgriffe pro Skill (z. B. Datei umbenennen, Ordner ordentlich packen)
-sind normal und kein Blocker.
+1. In Claude: **Customize → Plugins → "+" → "Add marketplace" → "Add from a repository"**.
+2. URL eintragen: `https://github.com/Cirrus-Real-Estate-GmbH/Cirrus-Skill-Set`
+3. Plugin **"Cirrus Skill Set"** installieren.
+4. Verifizieren: Anzahl der Skills im Plugin sollte deutlich größer 0 sein. Falls 0 Skills
+   angezeigt werden (bekannter, gelegentlich auftretender Anzeigefehler): Marketplace
+   entfernen und mit derselben URL neu hinzufügen, oder kurz bei Liron melden.
+5. In einem NEUEN Chat kurz `/` oder "+" öffnen und prüfen, dass die Team-Skills dort
+   auftauchen (Plugin-Installationen laden nicht rückwirkend in bereits offene Chats).
 
-1. Im gemeinsamen Cirrus Shared Drive den Ordner **"03 Skills"** öffnen (oberste Ebene,
-   nicht unter "00 Onboarding"). Falls die ID/der Pfad unklar ist, per Google-Drive-Suche
-   nach dem Ordnernamen "03 Skills" auflösen.
-2. Alle aktuell enthaltenen **nummerierten** Unterordner auflisten (Format meist
-   `[Nummer] - [Skill-Name] ([Initialen des Erstellers])`) — das ist die Liste der
-   tatsächlichen Team-Skills. Wie viele es aktuell sind, ist offen (aktuell ~15, kann mit
-   der Zeit wachsen). Unnummerierte Ordner im selben Verzeichnis sind kein Teil dieser
-   Liste und können ignoriert werden. Dem Nutzer die Liste zeigen, sortiert nach Nummer.
-3. Die Liste **der Reihe nach, einen Skill nach dem anderen** durchgehen. Pro Skill kurz
-   fragen, ob installiert werden soll — **Skip ist jederzeit eine valide Antwort**, ohne
-   Nachfrage warum. Kein Zwang, alle zu nehmen.
-4. Für jeden Skill, den der Nutzer haben will:
-   a. Zugehörigen Unterordner-Inhalt aus Drive holen (SKILL.md bzw. die Hauptdatei plus
-      etwaige `references/`, `assets/`, `scripts/`).
-   b. Daraus eine sauber benannte, installierbare Struktur bauen: Hauptdatei ggf. in
-      `SKILL.md` umbenennen, alles in einen einzigen, nach dem Skill benannten Ordner
-      packen, dann als ZIP.
-   c. In Claude: **Customize → Skills → "+" → "Create skill"** → ZIP hochladen.
-   d. Kurz bestätigen, dass der Skill in der Liste erscheint und aktiviert ist. Falls der
-      Upload aus irgendeinem Grund nicht klappt: kurz benennen, was fehlgeschlagen ist,
-      und mit dem nächsten Skill weitermachen statt hier stecken zu bleiben — der Nutzer
-      kann das einzelne Problem später mit dem/der Ersteller:in klären.
-5. Am Ende eine kurze Zusammenfassung zeigen: installierte Skills vs. übersprungene Skills.
-
-**Update-Hinweis für später:** Wenn jemand einen Skill im "03 Skills"-Ordner verbessert,
-ersetzt er/sie den jeweiligen Unterordner dort und meldet es im Team. Jede Person, die
-diesen Skill nutzt, wiederholt dann Schritt 4 für genau diesen einen Skill (alten Skill in
-Customize → Skills entfernen, neuen hochladen). Es gibt aktuell keinen automatischen Sync
-— das ist eine bewusste, einfache Zwischenlösung, bis es dafür eine bessere Infrastruktur gibt.
+**Update-Hinweis für später:** Sobald ein Skill im Repo aktualisiert wird (Team-Mail folgt
+jeweils), reicht: Marketplace-Eintrag öffnen → **"Sync automatically"** aktivieren (falls
+noch nicht geschehen) → **"Check for updates"** klicken. Falls das nichts zieht: Marketplace
+entfernen und mit derselben URL neu hinzufügen.
 
 ## Step 5 — Default reach
 
@@ -178,8 +171,11 @@ Run one small, read-only check per connected system and report a pass/fail table
 - Apollo.io: fetch own profile
 - Chrome: list tabs / open a neutral test page + screenshot
 - Filesystem: list the user's home directory
-- Plugins: confirm Wix, Productivity, PDF Viewer, Apollo.io, Lusha show as installed
-- Skills: confirm each newly installed Team-Skill appears in Customize → Skills
+- Plugins: confirm Wix, Productivity, PDF Viewer, Apollo.io, Lusha, and Cirrus Skill Set
+  show as installed
+- Cirrus Skill Set: confirm skill count > 0 and at least one Team-Skill is usable in a
+  new chat
+- GitHub (only if Step 1b was done): fetch the user's own GitHub profile via the connector
 
 Summarize what passed. For anything that failed, point back to the relevant step.
 
