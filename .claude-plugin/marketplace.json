@@ -1,5 +1,5 @@
 {
-  "name": "cirrus-skill-set-marketplace-v6",
+  "name": "cirrus-skill-set-marketplace-v7",
   "owner": {
     "name": "Cirrus Real Estate GmbH"
   },
@@ -30,7 +30,7 @@
         "./skills/team-weekly-summary",
         "./skills/cirrus-skill-creator"
       ],
-      "version": "1.6.0"
+      "version": "1.7.0"
     }
   ]
 }

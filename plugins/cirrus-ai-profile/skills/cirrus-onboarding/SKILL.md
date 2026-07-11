@@ -11,7 +11,7 @@ description: >
   shared "03 Skills" Drive folder (skippable per skill), setting the default reach,
   and running a final functional test — until the profile matches the Cirrus baseline.
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
   author: "Cirrus Real Estate GmbH"
 ---
 
@@ -73,10 +73,13 @@ Required connectors for the Cirrus baseline:
 - **Gmail**
 - **Google Calendar**
 - **Google Drive**
-- **Claude in Chrome** (browser control)
-- **Control Chrome** (local MCP — fast tab reading/scripting)
-- **Control Your Mac** (local MCP — AppleScript automation)
-- **Filesystem** (local MCP — access to the user's own files)
+- **Claude in Chrome** (browser control — funktioniert auf Mac und Windows)
+- **Control Chrome** (local MCP — schnelles Tab-Lesen/Scripting, funktioniert auf Mac
+  und Windows)
+- **Control Your Mac** (local MCP — AppleScript-Automatisierung, **Mac-exklusiv**; hat
+  aktuell KEIN Windows-Äquivalent laut Anthropic. Windows-Nutzer:innen überspringen diesen
+  Punkt einfach — kein Ersatz nötig, kein Blocker für den Rest des Onboardings)
+- **Filesystem** (local MCP — Zugriff auf eigene Dateien, funktioniert auf Mac und Windows)
 
 Call `ListConnectors` and compare against this list. Present a short checklist showing
 which are already connected (✅) and which are still missing (⬜). For each missing
