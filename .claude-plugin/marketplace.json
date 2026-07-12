@@ -1,5 +1,5 @@
 {
-  "name": "cirrus-skill-set-marketplace-v8",
+  "name": "cirrus-skill-set-marketplace-v9",
   "owner": {
     "name": "Cirrus Real Estate GmbH"
   },
@@ -31,7 +31,7 @@
         "./skills/cirrus-skill-creator",
         "./skills/haendlerkonditionen-email"
       ],
-      "version": "1.8.0"
+      "version": "1.9.0"
     }
   ]
 }
